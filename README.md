@@ -5,7 +5,7 @@ Student attendance is currently receiving a lot of attention from parents becaus
 ![image](https://github.com/baoxelo/FaceRecognition/assets/132845642/49d6e773-beb3-4f7f-a971-76a00598271e)
 ## The old app's result
 ![image](https://github.com/baoxelo/FaceRecognition/assets/132845642/15bea284-c990-42d8-b03c-bda2c8381801)
-
-
+## Reference source 
+https://github.com/antlancer-solutions/Simple-Face-Recognition-App-CS
 
 
