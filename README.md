@@ -6,6 +6,6 @@ Student attendance is currently receiving a lot of attention from parents becaus
 ## The old app's result
 ![image](https://github.com/baoxelo/FaceRecognition/assets/132845642/15bea284-c990-42d8-b03c-bda2c8381801)
 ## Reference source 
-https://github.com/antlancer-solutions/Simple-Face-Recognition-App-CS
-https://github.com/kipr/opencv/tree/master/data/haarcascades
+###https://github.com/antlancer-solutions/Simple-Face-Recognition-App-CS
+###https://github.com/kipr/opencv/tree/master/data/haarcascades
 
