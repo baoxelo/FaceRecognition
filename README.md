@@ -4,7 +4,8 @@ Student attendance is currently receiving a lot of attention from parents becaus
 ## Interface of Window form app
 ![image](https://github.com/baoxelo/FaceRecognition/assets/132845642/49d6e773-beb3-4f7f-a971-76a00598271e)
 ## The old app's result
-![Uploading image.png…]()
+![image](https://github.com/baoxelo/FaceRecognition/assets/132845642/15bea284-c990-42d8-b03c-bda2c8381801)
+
 
 
 
