@@ -98,7 +98,7 @@ namespace FaceRecognition
         private Task TrainImageFromDir()
         {
             int ImagesCount = 0;
-            double Threshold = 7000;
+            double Threshold = 5000;
             TrainedFaces.Clear();
             StudentLabels.Clear();
             StudentIds.Clear();
@@ -189,7 +189,7 @@ namespace FaceRecognition
                         {
                             Debug.WriteLine(result.Label + ". " + result.Distance);
                             //Here results found known faces
-                            if (result.Label != -1 && result.Distance < 7000)
+                            if (result.Label != -1 && result.Distance < 5000)
                             {
                                 var studentResult = _dbContext.Students.FirstOrDefault(m => m.StudentId == studentId);
                                 if (studentResult != null)
