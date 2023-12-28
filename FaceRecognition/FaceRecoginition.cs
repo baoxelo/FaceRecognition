@@ -27,7 +27,7 @@ namespace FaceRecognition
         List<Student> Students = new List<Student>();
         VideoCapture capture = new VideoCapture(0);
 
-        EigenFaceRecognizer recognizer;
+        private EigenFaceRecognizer recognizer { set; get; }
         #endregion
 
 
@@ -68,7 +68,7 @@ namespace FaceRecognition
                         Image<Bgr, Byte> saveImagePerson = resultImage;
                         try
                         {
-                            saveImagePerson.Resize(250, 250, Inter.Cubic).Save(path + @"\" + idTrainTextBox.Text + "_" + DateTime.Now.ToString("dd-mm-yyyy-hh-mm-ss") + ".jpg");
+                            saveImagePerson.Resize(200, 200, Inter.Cubic).Save(path + @"\" + idTrainTextBox.Text + "_" + DateTime.Now.ToString("dd-mm-yyyy-hh-mm-ss") + ".jpg");
                         }
                         catch (Exception ex)
                         {
@@ -104,15 +104,20 @@ namespace FaceRecognition
             StudentIds.Clear();
             try
             {
-                string path = Directory.GetCurrentDirectory() + @"\ImageDataset";
-                string[] files = Directory.GetFiles(path, "*.jpeg", SearchOption.AllDirectories);
+                string path = Path.Combine(Directory.GetCurrentDirectory(), "TrainedImages");
+                Debug.WriteLine($"{path}");
+                string[] files = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories);
+                foreach(var file in files)
+                {
+                    Debug.WriteLine($"{file}");
+                }
                 Thread.Sleep(3000);
 
                 trainPocessTextBox.Text = "wait";
                 Thread.Sleep(3000);
                 foreach (var file in files)
                 {
-                    Image<Gray, byte> trainedImage = new Image<Gray, byte>(file).Resize(250, 250, Inter.Cubic);
+                    Image<Gray, byte> trainedImage = new Image<Gray, byte>(file).Resize(200, 200, Inter.Cubic);
                     //Increase contrast and normalize brightness
                     CvInvoke.EqualizeHist(trainedImage, trainedImage);
 
@@ -129,7 +134,10 @@ namespace FaceRecognition
                 if (TrainedFaces.Count > 0)
                 {
                     //Create new recognizer
-                    recognizer = new EigenFaceRecognizer(ImagesCount, Threshold);
+                    if(recognizer == null)
+                    {
+                        recognizer = new EigenFaceRecognizer(int.MaxValue, Threshold);
+                    }
 
                     //Convert list of image to vector of Mat
                     Image<Gray, byte>[] Faces = TrainedFaces.ToArray();
@@ -142,8 +150,9 @@ namespace FaceRecognition
                     int[] labels = StudentLabels.ToArray();
                     VectorOfInt vectorOfInt = new VectorOfInt();
                     vectorOfInt.Push(labels);
+
                     //Train all images and labels
-                    Task training = new Task(() => recognizer.Train(vectorOfMat, vectorOfInt));
+                    Task training = new Task (() => recognizer.Train(vectorOfMat, vectorOfInt));
                     training.Start();
 
                 }
@@ -157,6 +166,7 @@ namespace FaceRecognition
                 isTrained = false;
                 MessageBox.Show("Error in Train Images: " + ex.Message);
             }
+            trainPocessTextBox.Text = "Done!";
 
             return Task.CompletedTask;
         }
@@ -170,7 +180,7 @@ namespace FaceRecognition
             CvInvoke.Resize(frame, frame, frameSize);
 
 
-            if (isRecognition == true)
+            if (isRecognition == true && recognizer != null)
             {
                 var faces = DetectFaces(frame);
                 if (faces.Length > 0)
@@ -181,39 +191,35 @@ namespace FaceRecognition
                         resultImage.ROI = face;
 
                         // Recognize the face 
-                        Image<Gray, Byte> grayFaceResult = resultImage.Convert<Gray, Byte>().Resize(250, 250, Inter.Cubic);
+                        Image<Gray, Byte> grayFaceResult = resultImage.Convert<Gray, Byte>().Resize(200, 200, Inter.Cubic);
+                        
                         CvInvoke.EqualizeHist(grayFaceResult, grayFaceResult);
+                        grayFaceResult.ToJpegData();
                         var result = recognizer.Predict(grayFaceResult);
-                        var studentId = StudentIds[result.Label];
-                        if (studentId != null)
+                        Debug.WriteLine(result.Label + ". " + result.Distance);
+                        //Here results found known faces
+                        if (result.Label != -1 )
                         {
-                            Debug.WriteLine(result.Label + ". " + result.Distance);
-                            //Here results found known faces
-                            if (result.Label != -1 && result.Distance < 5000)
-                            {
-                                var studentResult = _dbContext.Students.FirstOrDefault(m => m.StudentId == studentId);
-                                if (studentResult != null)
-                                {
-                                    Students.Add(studentResult);
-                                    CvInvoke.PutText(frame, studentResult.StudentName, new Point(face.X - 2, face.Y - 2),
-                                        FontFace.HersheyComplex, 1.0, new Bgr(Color.Orange).MCvScalar);
-                                    CvInvoke.Rectangle(frame, face, new Bgr(Color.Green).MCvScalar, 2);
-                                }
-                            }
-                            //here results did not found any know faces
-                            else
-                            {
-                                CvInvoke.PutText(frame, "Unknown", new Point(face.X - 2, face.Y - 2),
-                                    FontFace.HersheyComplex, 1.0, new Bgr(Color.Orange).MCvScalar);
-                                CvInvoke.Rectangle(frame, face, new Bgr(Color.Red).MCvScalar, 2);
+                            CvInvoke.PutText(frame, StudentIds[result.Label].ToString(), new Point(face.X - 2, face.Y - 2),
+                            FontFace.HersheyComplex, 1.0, new Bgr(Color.Orange).MCvScalar);
+                            CvInvoke.Rectangle(frame, face, new Bgr(Color.Green).MCvScalar, 2);
 
-                            }
+
                         }
+                        //here results did not found any know faces
+                        else
+                        {
+                            CvInvoke.PutText(frame, "Unknown", new Point(face.X - 2, face.Y - 2),
+                                FontFace.HersheyComplex, 1.0, new Bgr(Color.Orange).MCvScalar);
+                            CvInvoke.Rectangle(frame, face, new Bgr(Color.Red).MCvScalar, 2);
+                            
+                        }
+                        
 
                     }
                 }
+                
             }
-            countedStudents.Text = Students.Count().ToString();
             cameraBox.Image = frame.ToBitmap();
             if (frame != null)
             {
@@ -252,21 +258,18 @@ namespace FaceRecognition
 
 
         //DETECT FACE USING HAARCASCADE
-        private Rectangle[] DetectFaces(Mat frame)
+        public Rectangle[] DetectFaces(Mat frame)
         {
-            CascadeClassifier faceCascadeClassifier = new CascadeClassifier("Haarcascade/haarcascade_frontalface_alt.xml");
+            CascadeClassifier faceCascadeClassifier = new CascadeClassifier(Directory.GetCurrentDirectory() + "/haarcascade_frontalface_alt.xml");
             if (streamVideo)
             {
-                if (faceDetectEnable)
-                {
-                    Mat grayImage = new Mat();
-                    CvInvoke.CvtColor(frame, grayImage, ColorConversion.Bgr2Gray);
-                    //Enhance the image to get better result
-                    CvInvoke.EqualizeHist(grayImage, grayImage);
+                Mat grayImage = new Mat();
+                CvInvoke.CvtColor(frame, grayImage, ColorConversion.Bgr2Gray);
+                //Enhance the image to get better result
+                CvInvoke.EqualizeHist(grayImage, grayImage);
 
-                    Rectangle[] faces = faceCascadeClassifier.DetectMultiScale(grayImage, 1.1, 3, Size.Empty, Size.Empty);
-                    return faces;
-                }
+                Rectangle[] faces = faceCascadeClassifier.DetectMultiScale(grayImage, 1.1, 3, Size.Empty, Size.Empty);
+                return faces;
             }
             return Array.Empty<Rectangle>();
         }
@@ -323,7 +326,7 @@ namespace FaceRecognition
 
         private void button4_Click(object sender, EventArgs e)
         {
-             TrainImageFromDir();
+            TrainImageFromDir();
         }
 
         private void checkAttendanceButton_Click(object sender, EventArgs e)
@@ -345,6 +348,11 @@ namespace FaceRecognition
             command.ExecuteNonQuery();
             //... insert Attend or Absent for this column ...// 
             connection.Close();
+        }
+
+        private void recognitionBtn_Click(object sender, EventArgs e)
+        {
+            isRecognition = true;
         }
     }
 }
