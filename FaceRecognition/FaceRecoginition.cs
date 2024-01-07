@@ -98,7 +98,7 @@ namespace FaceRecognition
         private Task TrainImageFromDir()
         {
             int ImagesCount = 0;
-            double Threshold = 5000;
+            double Threshold = 4000;
             TrainedFaces.Clear();
             StudentLabels.Clear();
             StudentIds.Clear();
