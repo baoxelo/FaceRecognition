@@ -51,7 +51,7 @@
             Training = new TabPage();
             InformationGroup = new GroupBox();
             saveStudentImageBtn = new Button();
-            button4 = new Button();
+            buttonTrainImage = new Button();
             trainPocessTextBox = new TextBox();
             label9 = new Label();
             idTrainTextBox = new TextBox();
@@ -311,7 +311,7 @@
             // InformationGroup
             // 
             InformationGroup.Controls.Add(saveStudentImageBtn);
-            InformationGroup.Controls.Add(button4);
+            InformationGroup.Controls.Add(buttonTrainImage);
             InformationGroup.Controls.Add(trainPocessTextBox);
             InformationGroup.Controls.Add(label9);
             InformationGroup.Controls.Add(idTrainTextBox);
@@ -338,16 +338,16 @@
             saveStudentImageBtn.UseVisualStyleBackColor = true;
             saveStudentImageBtn.Click += saveStudentImage_Click;
             // 
-            // button4
+            // buttonTrainImage
             // 
-            button4.Location = new Point(113, 176);
-            button4.Margin = new Padding(3, 4, 3, 4);
-            button4.Name = "button4";
-            button4.Size = new Size(200, 37);
-            button4.TabIndex = 6;
-            button4.Text = "Train";
-            button4.UseVisualStyleBackColor = true;
-            button4.Click += button4_Click;
+            buttonTrainImage.Location = new Point(113, 176);
+            buttonTrainImage.Margin = new Padding(3, 4, 3, 4);
+            buttonTrainImage.Name = "buttonTrainImage";
+            buttonTrainImage.Size = new Size(200, 37);
+            buttonTrainImage.TabIndex = 6;
+            buttonTrainImage.Text = "Train";
+            buttonTrainImage.UseVisualStyleBackColor = true;
+            buttonTrainImage.Click += buttonTrainImage_Click;
             // 
             // trainPocessTextBox
             // 
@@ -594,7 +594,7 @@
         private TextBox nameTrainTextBox;
         private Label label8;
         private Label label7;
-        private Button button4;
+        private Button buttonTrainImage;
         private TextBox trainPocessTextBox;
         private Button checkAttendanceButton;
         private Button saveStudentImageBtn;

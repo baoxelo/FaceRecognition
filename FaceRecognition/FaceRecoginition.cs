@@ -101,7 +101,7 @@ namespace FaceRecognition
                 string path = Path.Combine(Directory.GetCurrentDirectory(), "TrainedImages");
                 Debug.WriteLine($"{path}");
                 string[] files = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories);
-                foreach(var file in files)
+                foreach (var file in files)
                 {
                     Debug.WriteLine($"{file}");
                 }
@@ -126,7 +126,7 @@ namespace FaceRecognition
                 if (TrainedFaces.Count > 0)
                 {
                     //Create new recognizer
-                    if(recognizer == null)
+                    if (recognizer == null)
                     {
                         recognizer = new EigenFaceRecognizer(int.MaxValue, Threshold);
                     }
@@ -144,8 +144,9 @@ namespace FaceRecognition
                     vectorOfInt.Push(labels);
 
                     //Train all images and labels
-                    Task training = new Task (() => recognizer.Train(vectorOfMat, vectorOfInt));
+                    Task training = new Task(() => recognizer.Train(vectorOfMat, vectorOfInt));
                     training.Start();
+                    trainPocessTextBox.Text = "Done!";
 
                 }
                 else
@@ -158,7 +159,6 @@ namespace FaceRecognition
                 isTrained = false;
                 MessageBox.Show("Error in Train Images: " + ex.Message);
             }
-            trainPocessTextBox.Text = "Done!";
 
             return Task.CompletedTask;
         }
@@ -184,12 +184,12 @@ namespace FaceRecognition
 
                         // Recognize the face 
                         Image<Gray, Byte> grayFaceResult = resultImage.Convert<Gray, Byte>().Resize(200, 200, Inter.Cubic);
-                        
+
                         CvInvoke.EqualizeHist(grayFaceResult, grayFaceResult);
                         var result = recognizer.Predict(grayFaceResult);
                         Debug.WriteLine(result.Label + ". " + result.Distance);
                         //Here results found known faces
-                        if (result.Label != -1 )
+                        if (result.Label != -1)
                         {
                             CvInvoke.PutText(frame, StudentIds[result.Label].ToString(), new Point(face.X - 2, face.Y - 2),
                             FontFace.HersheyComplex, 1.0, new Bgr(Color.Orange).MCvScalar);
@@ -203,13 +203,13 @@ namespace FaceRecognition
                             CvInvoke.PutText(frame, "Unknown", new Point(face.X - 2, face.Y - 2),
                                 FontFace.HersheyComplex, 1.0, new Bgr(Color.Orange).MCvScalar);
                             CvInvoke.Rectangle(frame, face, new Bgr(Color.Red).MCvScalar, 2);
-                            
+
                         }
-                        
+
 
                     }
                 }
-                
+
             }
             cameraBox.Image = frame.ToBitmap();
             if (frame != null)
@@ -270,6 +270,7 @@ namespace FaceRecognition
             base.OnLoad(e);
             this._dbContext = new DatabaseContext();
             this._dbContext.Database.EnsureCreated();
+            selectDatePicker.MinDate = DateTime.Now;
 
         }
         private void closeCamera()
@@ -284,8 +285,10 @@ namespace FaceRecognition
             capture.ImageGrabbed += Capture_Recognite_ImageGrabbed;
             capture.Start();
         }
-
-
+        private void buttonTrainImage_Click(object sender, EventArgs e)
+        {
+            TrainImageFromDir();
+        }
         private void tabMain_SelectedIndexChanged(object sender, EventArgs e)
         {
             closeCamera();
@@ -314,17 +317,13 @@ namespace FaceRecognition
             var totalFile = Files.Count();
 
             //Make sure the total files increase 100 image
-            while((Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories)).Count() <= totalFile + 100)
+            while ((Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories)).Count() <= totalFile + 100)
             {
                 //The loop may be skipped if the face is not detected
                 await SaveImageProcessAsync();
             }
         }
 
-        private void button4_Click(object sender, EventArgs e)
-        {
-            TrainImageFromDir();
-        }
 
         private void checkAttendanceButton_Click(object sender, EventArgs e)
         {
@@ -351,5 +350,6 @@ namespace FaceRecognition
         {
             isRecognition = true;
         }
+
     }
 }
