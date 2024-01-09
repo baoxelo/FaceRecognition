@@ -10,6 +10,7 @@ using Emgu.CV.Util;
 using System.Xml.Linq;
 using Microsoft.Data.Sqlite;
 using System.Data.Common;
+using System.IO;
 
 namespace FaceRecognition
 {
@@ -38,18 +39,17 @@ namespace FaceRecognition
         }
 
         //SAVE IMAGE POCESS
-        private async Task SaveImagePocessAsync()
+        public async Task SaveImageProcessAsync()
         {
             if (idTrainTextBox.Text != "" && nameTrainTextBox != null)
             {
-                var student = await _dbContext.Students.SingleOrDefaultAsync(x => x.StudentId == idTrainTextBox.Text);
+                /*var student = await _dbContext.Students.SingleOrDefaultAsync(x => x.StudentId == idTrainTextBox.Text);
                 if (student == null)
                 {
                     _dbContext.Students.Add(new Student() { StudentId = idTrainTextBox.Text, StudentName = nameTrainTextBox.Text });
                     _dbContext.CheckDates.Add(new CheckDate() { StudentId = idTrainTextBox.Text, StudentName = nameTrainTextBox.Text });
                     _dbContext.SaveChanges();
-                }
-
+                }*/
                 Mat frame = new Mat();
                 capture.Retrieve(frame);
                 var faces = DetectFaces(frame);
@@ -75,19 +75,13 @@ namespace FaceRecognition
                             Debug.WriteLine(ex);
                         }
                     }
-
-                }
-                else
-                {
-
-                }
-
-                if (saveStudentImageBtn.InvokeRequired)
-                {
-                    saveStudentImageBtn.Invoke(new ThreadStart(delegate
+                    if (saveStudentImageBtn.InvokeRequired)
                     {
-                        saveStudentImageBtn.Enabled = true;
-                    }));
+                        saveStudentImageBtn.Invoke(new ThreadStart(delegate
+                        {
+                            saveStudentImageBtn.Enabled = true;
+                        }));
+                    }
                 }
             }
 
@@ -98,7 +92,7 @@ namespace FaceRecognition
         private Task TrainImageFromDir()
         {
             int ImagesCount = 0;
-            double Threshold = 4000;
+            double Threshold = 5000;
             TrainedFaces.Clear();
             StudentLabels.Clear();
             StudentIds.Clear();
@@ -111,12 +105,10 @@ namespace FaceRecognition
                 {
                     Debug.WriteLine($"{file}");
                 }
-                Thread.Sleep(3000);
-
                 trainPocessTextBox.Text = "wait";
-                Thread.Sleep(3000);
                 foreach (var file in files)
                 {
+                    //Make sure the image's size
                     Image<Gray, byte> trainedImage = new Image<Gray, byte>(file).Resize(200, 200, Inter.Cubic);
                     //Increase contrast and normalize brightness
                     CvInvoke.EqualizeHist(trainedImage, trainedImage);
@@ -175,9 +167,9 @@ namespace FaceRecognition
         private void Capture_Recognite_ImageGrabbed(object? sender, EventArgs e)
         {
             Mat frame = new Mat();
-            capture.Retrieve(frame);
+            capture.Retrieve(frame);/*
             var frameSize = new System.Drawing.Size(cameraBox.Width, cameraBox.Height);
-            CvInvoke.Resize(frame, frame, frameSize);
+            CvInvoke.Resize(frame, frame, frameSize);*/
 
 
             if (isRecognition == true && recognizer != null)
@@ -194,7 +186,6 @@ namespace FaceRecognition
                         Image<Gray, Byte> grayFaceResult = resultImage.Convert<Gray, Byte>().Resize(200, 200, Inter.Cubic);
                         
                         CvInvoke.EqualizeHist(grayFaceResult, grayFaceResult);
-                        grayFaceResult.ToJpegData();
                         var result = recognizer.Predict(grayFaceResult);
                         Debug.WriteLine(result.Label + ". " + result.Distance);
                         //Here results found known faces
@@ -234,8 +225,8 @@ namespace FaceRecognition
         {
             Mat frame = new Mat();
             capture.Retrieve(frame);
-            var frameSize = new System.Drawing.Size(cameraBox.Width, cameraBox.Height);
-            CvInvoke.Resize(frame, frame, frameSize);
+            /*var frameSize = new System.Drawing.Size(cameraBox.Width, cameraBox.Height);
+            CvInvoke.Resize(frame, frame, frameSize);*/
             var faces = DetectFaces(frame);
             if (faces.Length > 0)
             {
@@ -318,9 +309,15 @@ namespace FaceRecognition
 
         private async void saveStudentImage_Click(object sender, EventArgs e)
         {
-            for (int i = 0; i < 1000; i++)
+            string path = Path.Combine(Directory.GetCurrentDirectory(), "TrainedImages");
+            var Files = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories);
+            var totalFile = Files.Count();
+
+            //Make sure the total files increase 100 image
+            while((Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories)).Count() <= totalFile + 100)
             {
-                await SaveImagePocessAsync();
+                //The loop may be skipped if the face is not detected
+                await SaveImageProcessAsync();
             }
         }
 
