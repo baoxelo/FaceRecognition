@@ -144,7 +144,8 @@ namespace FaceRecognition
                     vectorOfInt.Push(labels);
 
                     //Train all images and labels
-                    Task training = new Task(() => {
+                    Task training = new Task(() =>
+                    {
                         recognizer.Train(vectorOfMat, vectorOfInt);
                         UpdateTrainProcessTextBox("Training successfully");
                     }
@@ -154,7 +155,7 @@ namespace FaceRecognition
                 }
                 else
                 {
-                    trainPocessTextBox.Text = "No images";
+                    trainProcessTextBox.Text = "No images";
                     isTrained = false;
                 }
             }
@@ -272,13 +273,24 @@ namespace FaceRecognition
         //EVENT HANDLER
         private void UpdateTrainProcessTextBox(string text)
         {
-            if (trainPocessTextBox.InvokeRequired)
+            if (trainProcessTextBox.InvokeRequired)
             {
-                trainPocessTextBox.Invoke(new Action(() => UpdateTrainProcessTextBox(text)));
+                trainProcessTextBox.Invoke(new Action(() => UpdateTrainProcessTextBox(text)));
             }
             else
             {
-                trainPocessTextBox.Text = text;
+                trainProcessTextBox.Text = text;
+            }
+        }
+        private void UpdateProgressText(string text)
+        {
+            if (percentProgess.InvokeRequired)
+            {
+                percentProgess.Invoke(new Action(() => UpdateProgressText(text)));
+            }
+            else
+            {
+                percentProgess.Text = text;
             }
         }
         protected override void OnLoad(EventArgs e)
@@ -329,16 +341,21 @@ namespace FaceRecognition
         private async void saveStudentImage_Click(object sender, EventArgs e)
         {
             UpdateTrainProcessTextBox("Saving images ...!");
-            Task saving = new Task(async () => {
+            Task saving = new Task(async () =>
+            {
                 string path = Path.Combine(Directory.GetCurrentDirectory(), "TrainedImages");
-                var Files = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories);
-                var totalFile = Files.Count();
+                var oldFiles = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories).Count();
+                var newFiles = 100;
 
                 //Make sure the total files increase 100 image
-                while ((Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories)).Count() <= totalFile + 100)
+                while ((Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories)).Count() <= oldFiles + newFiles)
                 {
                     //The loop may be skipped if the face is not detected
                     await SaveImageProcessAsync();
+                    var currentFiles = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories).Count();
+                    /*(((currentFiles - oldFiles) / newFiles) * 100).ToString() + " %"*/
+                    var percentage = (currentFiles - oldFiles) * 100 / newFiles;
+                    UpdateProgressText(percentage.ToString() + " %");
                 }
                 UpdateTrainProcessTextBox("Saving image successfully");
             }
@@ -372,6 +389,5 @@ namespace FaceRecognition
         {
             isRecognition = true;
         }
-
     }
 }

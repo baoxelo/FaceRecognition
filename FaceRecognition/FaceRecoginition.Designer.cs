@@ -52,7 +52,7 @@
             InformationGroup = new GroupBox();
             saveStudentImageBtn = new Button();
             buttonTrainImage = new Button();
-            trainPocessTextBox = new TextBox();
+            trainProcessTextBox = new TextBox();
             label9 = new Label();
             idTrainTextBox = new TextBox();
             nameTrainTextBox = new TextBox();
@@ -69,6 +69,7 @@
             GroupLogo = new PictureBox();
             UniversityLogo = new PictureBox();
             label2 = new Label();
+            percentProgess = new TextBox();
             tabMain.SuspendLayout();
             Recognition.SuspendLayout();
             groupBox2.SuspendLayout();
@@ -310,9 +311,10 @@
             // 
             // InformationGroup
             // 
+            InformationGroup.Controls.Add(percentProgess);
             InformationGroup.Controls.Add(saveStudentImageBtn);
             InformationGroup.Controls.Add(buttonTrainImage);
-            InformationGroup.Controls.Add(trainPocessTextBox);
+            InformationGroup.Controls.Add(trainProcessTextBox);
             InformationGroup.Controls.Add(label9);
             InformationGroup.Controls.Add(idTrainTextBox);
             InformationGroup.Controls.Add(nameTrainTextBox);
@@ -349,23 +351,23 @@
             buttonTrainImage.UseVisualStyleBackColor = true;
             buttonTrainImage.Click += buttonTrainImage_Click;
             // 
-            // trainPocessTextBox
+            // trainProcessTextBox
             // 
-            trainPocessTextBox.Font = new Font("Segoe UI", 15F);
-            trainPocessTextBox.Location = new Point(12, 267);
-            trainPocessTextBox.Margin = new Padding(3, 4, 3, 4);
-            trainPocessTextBox.Name = "trainPocessTextBox";
-            trainPocessTextBox.Size = new Size(329, 41);
-            trainPocessTextBox.TabIndex = 5;
+            trainProcessTextBox.Font = new Font("Segoe UI", 15F);
+            trainProcessTextBox.Location = new Point(12, 267);
+            trainProcessTextBox.Margin = new Padding(3, 4, 3, 4);
+            trainProcessTextBox.Name = "trainProcessTextBox";
+            trainProcessTextBox.Size = new Size(329, 41);
+            trainProcessTextBox.TabIndex = 5;
             // 
             // label9
             // 
             label9.AutoSize = true;
-            label9.Location = new Point(7, 230);
+            label9.Location = new Point(12, 230);
             label9.Name = "label9";
-            label9.Size = new Size(105, 20);
+            label9.Size = new Size(72, 20);
             label9.TabIndex = 4;
-            label9.Text = "Traning Pocess";
+            label9.Text = "Progress :";
             // 
             // idTrainTextBox
             // 
@@ -522,6 +524,15 @@
             label2.TabIndex = 4;
             label2.Text = "Facial Recoginition with Emgu CV";
             // 
+            // percentProgess
+            // 
+            percentProgess.Font = new Font("Segoe UI", 15F);
+            percentProgess.Location = new Point(113, 221);
+            percentProgess.Margin = new Padding(3, 4, 3, 4);
+            percentProgess.Name = "percentProgess";
+            percentProgess.Size = new Size(153, 41);
+            percentProgess.TabIndex = 8;
+            // 
             // FaceRecoginition
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
@@ -595,8 +606,9 @@
         private Label label8;
         private Label label7;
         private Button buttonTrainImage;
-        private TextBox trainPocessTextBox;
+        private TextBox trainProcessTextBox;
         private Button checkAttendanceButton;
         private Button saveStudentImageBtn;
+        private TextBox percentProgess;
     }
 }
