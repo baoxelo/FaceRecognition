@@ -3,11 +3,15 @@ using System.Collections.Generic;
 
 namespace FaceRecognition.Models;
 
-public partial class Attendance
+public partial class AttendanceItem
 {
     public int Id { get; set; }
 
-    public DateOnly? AttendanceDate { get; set; }
+    public int? StudentId { get; set; }
+
+    public int? AttendanceId { get; set; }
+
+    public string? Status { get; set; }
 
     public string? Note { get; set; }
 }

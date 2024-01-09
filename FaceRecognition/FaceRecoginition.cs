@@ -2,7 +2,6 @@ using Emgu.CV.Face;
 using Emgu.CV.Structure;
 using Emgu.CV;
 using System.Linq;
-using FaceRecognition.Models;
 using Microsoft.EntityFrameworkCore;
 using Emgu.CV.CvEnum;
 using System.Diagnostics;
@@ -25,14 +24,12 @@ namespace FaceRecognition
         List<Image<Gray, Byte>> TrainedFaces = new List<Image<Gray, byte>>();
         List<int> StudentLabels = new List<int>();
         List<string> StudentIds = new List<string>();
-        List<Student> Students = new List<Student>();
         VideoCapture capture = new VideoCapture(0);
 
         private EigenFaceRecognizer recognizer { set; get; }
         #endregion
 
 
-        private DatabaseContext _dbContext;
         public FaceRecoginition()
         {
             InitializeComponent();
@@ -75,13 +72,7 @@ namespace FaceRecognition
                             Debug.WriteLine(ex);
                         }
                     }
-                    if (saveStudentImageBtn.InvokeRequired)
-                    {
-                        saveStudentImageBtn.Invoke(new ThreadStart(delegate
-                        {
-                            saveStudentImageBtn.Enabled = true;
-                        }));
-                    }
+                    
                 }
             }
 
@@ -92,7 +83,7 @@ namespace FaceRecognition
         private Task TrainImageFromDir()
         {
             int ImagesCount = 0;
-            double Threshold = 5000;
+            double Threshold = 4000;
             TrainedFaces.Clear();
             StudentLabels.Clear();
             StudentIds.Clear();
@@ -128,9 +119,9 @@ namespace FaceRecognition
                     //Create new recognizer
                     if (recognizer == null)
                     {
-                        recognizer = new EigenFaceRecognizer(int.MaxValue, Threshold);
+                        recognizer = new EigenFaceRecognizer(int.MaxValue, 10000);
+                        
                     }
-
                     //Convert list of image to vector of Mat
                     Image<Gray, byte>[] Faces = TrainedFaces.ToArray();
                     VectorOfMat vectorOfMat = new VectorOfMat();
@@ -230,6 +221,7 @@ namespace FaceRecognition
         {
             Mat frame = new Mat();
             capture.Retrieve(frame);
+            // Now 'grayImage' contains the thresholded result using Otsu's Method
             /*var frameSize = new System.Drawing.Size(cameraBox.Width, cameraBox.Height);
             CvInvoke.Resize(frame, frame, frameSize);*/
             var faces = DetectFaces(frame);
@@ -296,8 +288,8 @@ namespace FaceRecognition
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            this._dbContext = new DatabaseContext();
-            this._dbContext.Database.EnsureCreated();
+            /*this._dbContext = new DatabaseContext();
+            this._dbContext.Database.EnsureCreated();*/
             selectDatePicker.MinDate = DateTime.Now;
 
         }
@@ -341,6 +333,8 @@ namespace FaceRecognition
         private async void saveStudentImage_Click(object sender, EventArgs e)
         {
             UpdateTrainProcessTextBox("Saving images ...!");
+            saveStudentImageBtn.Enabled = false;
+            
             Task saving = new Task(async () =>
             {
                 string path = Path.Combine(Directory.GetCurrentDirectory(), "TrainedImages");
@@ -348,7 +342,7 @@ namespace FaceRecognition
                 var newFiles = 100;
 
                 //Make sure the total files increase 100 image
-                while ((Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories)).Count() <= oldFiles + newFiles)
+                while ((Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories)).Count() < oldFiles + newFiles)
                 {
                     //The loop may be skipped if the face is not detected
                     await SaveImageProcessAsync();
@@ -358,6 +352,10 @@ namespace FaceRecognition
                     UpdateProgressText(percentage.ToString() + " %");
                 }
                 UpdateTrainProcessTextBox("Saving image successfully");
+                saveStudentImageBtn.Invoke(new ThreadStart(delegate
+                {
+                    saveStudentImageBtn.Enabled = true;
+                }));
             }
             );
             saving.Start();
@@ -366,8 +364,8 @@ namespace FaceRecognition
 
         private void checkAttendanceButton_Click(object sender, EventArgs e)
         {
-            Attendance attendance = new Attendance() { AttendanceDate = selectDatePicker.Value, Note = noteTextBox.Text, Attend = Students.Count() };
-            _dbContext.Attendances.Add(attendance);
+            /*Attendance attendance = new Attendance() { AttendanceDate = selectDatePicker.Value, Note = noteTextBox.Text, Attend = Students.Count() };
+            _dbContext.Attendances.Add(attendance);*/
 
             // ADO .NET TO CREATE DATE COLUMNS 
             var sqlStringBuilder = new SqliteConnectionStringBuilder();
