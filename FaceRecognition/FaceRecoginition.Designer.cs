@@ -351,17 +351,17 @@
             // 
             // trainPocessTextBox
             // 
-            trainPocessTextBox.Font = new Font("Segoe UI", 30F);
-            trainPocessTextBox.Location = new Point(166, 221);
+            trainPocessTextBox.Font = new Font("Segoe UI", 15F);
+            trainPocessTextBox.Location = new Point(12, 267);
             trainPocessTextBox.Margin = new Padding(3, 4, 3, 4);
             trainPocessTextBox.Name = "trainPocessTextBox";
-            trainPocessTextBox.Size = new Size(130, 74);
+            trainPocessTextBox.Size = new Size(329, 41);
             trainPocessTextBox.TabIndex = 5;
             // 
             // label9
             // 
             label9.AutoSize = true;
-            label9.Location = new Point(50, 249);
+            label9.Location = new Point(7, 230);
             label9.Name = "label9";
             label9.Size = new Size(105, 20);
             label9.TabIndex = 4;
