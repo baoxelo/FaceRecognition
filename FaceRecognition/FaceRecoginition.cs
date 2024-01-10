@@ -82,7 +82,7 @@ namespace FaceRecognition
         //TRAIN IMAGE IN DATASET
         private Task TrainImageFromDir()
         {
-            int ImagesCount = 0;
+            int trainLabel = 0;
             double Threshold = 4000;
             TrainedFaces.Clear();
             StudentLabels.Clear();
@@ -93,6 +93,7 @@ namespace FaceRecognition
                 string path = Path.Combine(Directory.GetCurrentDirectory(), "TrainedImages");
                 Debug.WriteLine($"{path}");
                 string[] files = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories);
+                string? label = null;
                 foreach (var file in files)
                 {
                     Debug.WriteLine($"{file}");
@@ -100,17 +101,23 @@ namespace FaceRecognition
                 foreach (var file in files)
                 {
                     //Make sure the image's size
+                    string name = file.Split('\\').Last().Split('_')[0];
+                    if(label == null) label = name;
+                    if(name != label)
+                    {
+                        trainLabel++;
+                        label = name;
+                    }
+
                     Image<Gray, byte> trainedImage = new Image<Gray, byte>(file).Resize(200, 200, Inter.Cubic);
                     //Increase contrast and normalize brightness
                     CvInvoke.EqualizeHist(trainedImage, trainedImage);
-
+                   
                     //Add images and label to train
                     TrainedFaces.Add(trainedImage);
-                    StudentLabels.Add(ImagesCount);
-                    string name = file.Split('\\').Last().Split('_')[0];
+                    StudentLabels.Add(trainLabel);
                     StudentIds.Add(name);
-                    ImagesCount++;
-                    Debug.WriteLine(ImagesCount + ". " + name);
+                    Debug.WriteLine(trainLabel + ". " + name);
 
                 }
 
@@ -119,7 +126,7 @@ namespace FaceRecognition
                     //Create new recognizer
                     if (recognizer == null)
                     {
-                        recognizer = new EigenFaceRecognizer(int.MaxValue, 10000);
+                        recognizer = new EigenFaceRecognizer(int.MaxValue, Threshold);
                         
                     }
                     //Convert list of image to vector of Mat
@@ -339,7 +346,7 @@ namespace FaceRecognition
             {
                 string path = Path.Combine(Directory.GetCurrentDirectory(), "TrainedImages");
                 var oldFiles = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories).Count();
-                var newFiles = 100;
+                var newFiles = 1000;
 
                 //Make sure the total files increase 100 image
                 while ((Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories)).Count() < oldFiles + newFiles)
