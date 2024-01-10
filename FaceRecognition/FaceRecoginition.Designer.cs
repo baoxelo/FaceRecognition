@@ -39,8 +39,9 @@
             countedStudents = new TextBox();
             label5 = new Label();
             attendanceHandleGroup = new GroupBox();
+            textBox1 = new TextBox();
+            label10 = new Label();
             checkAttendanceButton = new Button();
-            label4 = new Label();
             noteTextBox = new RichTextBox();
             label3 = new Label();
             selectDatePicker = new DateTimePicker();
@@ -50,6 +51,7 @@
             openCameraBtn = new Button();
             Training = new TabPage();
             InformationGroup = new GroupBox();
+            percentProgess = new TextBox();
             saveStudentImageBtn = new Button();
             buttonTrainImage = new Button();
             trainProcessTextBox = new TextBox();
@@ -69,7 +71,7 @@
             GroupLogo = new PictureBox();
             UniversityLogo = new PictureBox();
             label2 = new Label();
-            percentProgess = new TextBox();
+            label4 = new Label();
             tabMain.SuspendLayout();
             Recognition.SuspendLayout();
             groupBox2.SuspendLayout();
@@ -187,6 +189,8 @@
             // 
             // attendanceHandleGroup
             // 
+            attendanceHandleGroup.Controls.Add(textBox1);
+            attendanceHandleGroup.Controls.Add(label10);
             attendanceHandleGroup.Controls.Add(checkAttendanceButton);
             attendanceHandleGroup.Controls.Add(label4);
             attendanceHandleGroup.Controls.Add(noteTextBox);
@@ -201,25 +205,32 @@
             attendanceHandleGroup.TabStop = false;
             attendanceHandleGroup.Text = "Attendance Options";
             // 
+            // textBox1
+            // 
+            textBox1.Location = new Point(108, 237);
+            textBox1.Name = "textBox1";
+            textBox1.Size = new Size(239, 27);
+            textBox1.TabIndex = 6;
+            // 
+            // label10
+            // 
+            label10.AutoSize = true;
+            label10.Location = new Point(7, 244);
+            label10.Name = "label10";
+            label10.Size = new Size(72, 20);
+            label10.TabIndex = 5;
+            label10.Text = "Progress :";
+            // 
             // checkAttendanceButton
             // 
-            checkAttendanceButton.Location = new Point(7, 208);
+            checkAttendanceButton.Location = new Point(19, 194);
             checkAttendanceButton.Margin = new Padding(3, 4, 3, 4);
             checkAttendanceButton.Name = "checkAttendanceButton";
-            checkAttendanceButton.Size = new Size(341, 31);
+            checkAttendanceButton.Size = new Size(328, 31);
             checkAttendanceButton.TabIndex = 4;
             checkAttendanceButton.Text = "Check Attendance";
             checkAttendanceButton.UseVisualStyleBackColor = true;
             checkAttendanceButton.Click += checkAttendanceButton_Click;
-            // 
-            // label4
-            // 
-            label4.AutoSize = true;
-            label4.Location = new Point(7, 89);
-            label4.Name = "label4";
-            label4.Size = new Size(49, 20);
-            label4.TabIndex = 3;
-            label4.Text = "Note :";
             // 
             // noteTextBox
             // 
@@ -268,7 +279,7 @@
             recognitionBtn.Name = "recognitionBtn";
             recognitionBtn.Size = new Size(190, 31);
             recognitionBtn.TabIndex = 2;
-            recognitionBtn.Text = "Recognition";
+            recognitionBtn.Text = "Recognize";
             recognitionBtn.UseVisualStyleBackColor = true;
             recognitionBtn.Click += recognitionBtn_Click;
             // 
@@ -328,6 +339,15 @@
             InformationGroup.TabIndex = 3;
             InformationGroup.TabStop = false;
             InformationGroup.Text = "Information";
+            // 
+            // percentProgess
+            // 
+            percentProgess.Font = new Font("Segoe UI", 15F);
+            percentProgess.Location = new Point(113, 221);
+            percentProgess.Margin = new Padding(3, 4, 3, 4);
+            percentProgess.Name = "percentProgess";
+            percentProgess.Size = new Size(153, 41);
+            percentProgess.TabIndex = 8;
             // 
             // saveStudentImageBtn
             // 
@@ -524,20 +544,20 @@
             label2.TabIndex = 4;
             label2.Text = "Facial Recoginition with Emgu CV";
             // 
-            // percentProgess
+            // label4
             // 
-            percentProgess.Font = new Font("Segoe UI", 15F);
-            percentProgess.Location = new Point(113, 221);
-            percentProgess.Margin = new Padding(3, 4, 3, 4);
-            percentProgess.Name = "percentProgess";
-            percentProgess.Size = new Size(153, 41);
-            percentProgess.TabIndex = 8;
+            label4.AutoSize = true;
+            label4.Location = new Point(7, 89);
+            label4.Name = "label4";
+            label4.Size = new Size(49, 20);
+            label4.TabIndex = 3;
+            label4.Text = "Note :";
             // 
             // FaceRecoginition
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1334, 984);
+            ClientSize = new Size(1334, 1055);
             Controls.Add(label2);
             Controls.Add(UniversityLogo);
             Controls.Add(GroupLogo);
@@ -589,7 +609,6 @@
         private ListBox listStudentsBox;
         private TextBox countedStudents;
         private Label label5;
-        private Label label4;
         private RichTextBox noteTextBox;
         private GroupBox groupBox2;
         private PictureBox cameraBox;
@@ -610,5 +629,8 @@
         private Button checkAttendanceButton;
         private Button saveStudentImageBtn;
         private TextBox percentProgess;
+        private TextBox textBox1;
+        private Label label10;
+        private Label label4;
     }
 }

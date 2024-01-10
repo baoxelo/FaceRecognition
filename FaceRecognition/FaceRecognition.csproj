@@ -48,7 +48,6 @@
 
   <ItemGroup>
     <Folder Include="Haarcascade\" />
-    <Folder Include="Models\" />
   </ItemGroup>
 
 </Project>
