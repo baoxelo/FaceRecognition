@@ -26,6 +26,7 @@ namespace FaceRecognition
         List<string> StudentIds = new List<string>();
         VideoCapture capture = new VideoCapture(0);
 
+        SortedList<int, string> listLabel = new SortedList<int, string>();
         private EigenFaceRecognizer recognizer { set; get; }
         #endregion
 
@@ -65,7 +66,7 @@ namespace FaceRecognition
                         Image<Bgr, Byte> saveImagePerson = resultImage;
                         try
                         {
-                            saveImagePerson.Resize(200, 200, Inter.Cubic).Save(path + @"\" + idTrainTextBox.Text + "_" + DateTime.Now.ToString("dd-mm-yyyy-hh-mm-ss") + ".jpg");
+                            saveImagePerson.Resize(100, 100, Inter.Cubic).Save(path + @"\" + idTrainTextBox.Text + "_" + DateTime.Now.ToString("dd-mm-yyyy-hh-mm-ss") + ".jpg");
                         }
                         catch (Exception ex)
                         {
@@ -83,6 +84,7 @@ namespace FaceRecognition
         private Task TrainImageFromDir()
         {
             int trainLabel = 0;
+            int loop = 0;
             double Threshold = 4000;
             TrainedFaces.Clear();
             StudentLabels.Clear();
@@ -102,14 +104,26 @@ namespace FaceRecognition
                 {
                     //Make sure the image's size
                     string name = file.Split('\\').Last().Split('_')[0];
-                    if(label == null) label = name;
-                    if(name != label)
+                    if (label == null)
+                    {
+                        label = name;
+                        listLabel.Add(trainLabel, label);
+
+                    }
+                    if (name != label)
                     {
                         trainLabel++;
+                        loop = 0;
                         label = name;
+                        listLabel.Add(trainLabel, label);
                     }
-
-                    Image<Gray, byte> trainedImage = new Image<Gray, byte>(file).Resize(200, 200, Inter.Cubic);
+                    /*if(loop == 100)
+                    {
+                        loop = 0;
+                        trainLabel++;
+                        listLabel.Add(trainLabel, label);
+                    }*/
+                    Image<Gray, byte> trainedImage = new Image<Gray, byte>(file).Resize(100, 100, Inter.Cubic);
                     //Increase contrast and normalize brightness
                     CvInvoke.EqualizeHist(trainedImage, trainedImage);
                    
@@ -117,8 +131,15 @@ namespace FaceRecognition
                     TrainedFaces.Add(trainedImage);
                     StudentLabels.Add(trainLabel);
                     StudentIds.Add(name);
-                    Debug.WriteLine(trainLabel + ". " + name);
+                    Debug.WriteLine(trainLabel + ". " + name + ". " + file);
+                    loop++;
 
+                }
+                Debug.WriteLine("Sortlist");
+
+                foreach (KeyValuePair<int, string> item in listLabel)
+                {
+                    Debug.WriteLine($"{item.Key} - {item.Value}");
                 }
 
                 if (TrainedFaces.Count > 0)
@@ -186,7 +207,7 @@ namespace FaceRecognition
                         resultImage.ROI = face;
 
                         // Recognize the face 
-                        Image<Gray, Byte> grayFaceResult = resultImage.Convert<Gray, Byte>().Resize(200, 200, Inter.Cubic);
+                        Image<Gray, Byte> grayFaceResult = resultImage.Convert<Gray, Byte>().Resize(100, 100, Inter.Cubic);
 
                         CvInvoke.EqualizeHist(grayFaceResult, grayFaceResult);
                         var result = recognizer.Predict(grayFaceResult);
@@ -194,7 +215,7 @@ namespace FaceRecognition
                         //Here results found known faces
                         if (result.Label != -1)
                         {
-                            CvInvoke.PutText(frame, StudentIds[result.Label].ToString(), new Point(face.X - 2, face.Y - 2),
+                            CvInvoke.PutText(frame, listLabel.FirstOrDefault(q => q.Key == result.Label).Value.ToString(), new Point(face.X - 2, face.Y - 2),
                             FontFace.HersheyComplex, 1.0, new Bgr(Color.Orange).MCvScalar);
                             CvInvoke.Rectangle(frame, face, new Bgr(Color.Green).MCvScalar, 2);
 
