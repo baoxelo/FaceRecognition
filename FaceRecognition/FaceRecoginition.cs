@@ -21,15 +21,15 @@ namespace FaceRecognition
         bool savePerson = false;
         bool isTrained = false;
         bool isRecognition = false;
-        List<Image<Gray, Byte>> TrainedFaces = new List<Image<Gray, byte>>();
-        List<int> StudentLabels = new List<int>();
-        List<string> StudentIds = new List<string>();
-        VideoCapture capture = new VideoCapture(0);
 
+        List<Image<Gray, Byte>> TrainedFaces = new List<Image<Gray, byte>>();
+        List<int> TrainedLabels = new List<int>();
         SortedList<int, string> listLabel = new SortedList<int, string>();
         private EigenFaceRecognizer recognizer { set; get; }
         #endregion
+        VideoCapture capture = new VideoCapture(0);
 
+        CascadeClassifier faceCascadeClassifier = new CascadeClassifier(Directory.GetCurrentDirectory() + "/haarcascade_frontalface_alt.xml");
 
         public FaceRecoginition()
         {
@@ -41,13 +41,6 @@ namespace FaceRecognition
         {
             if (idTrainTextBox.Text != "" && nameTrainTextBox != null)
             {
-                /*var student = await _dbContext.Students.SingleOrDefaultAsync(x => x.StudentId == idTrainTextBox.Text);
-                if (student == null)
-                {
-                    _dbContext.Students.Add(new Student() { StudentId = idTrainTextBox.Text, StudentName = nameTrainTextBox.Text });
-                    _dbContext.CheckDates.Add(new CheckDate() { StudentId = idTrainTextBox.Text, StudentName = nameTrainTextBox.Text });
-                    _dbContext.SaveChanges();
-                }*/
                 Mat frame = new Mat();
                 capture.Retrieve(frame);
                 var faces = DetectFaces(frame);
@@ -63,7 +56,8 @@ namespace FaceRecognition
                             Directory.CreateDirectory(path);
 
 
-                        Image<Bgr, Byte> saveImagePerson = resultImage;
+                        Image<Gray, Byte> saveImagePerson = resultImage.Convert<Gray, Byte>();
+                        CvInvoke.EqualizeHist(saveImagePerson, saveImagePerson);
                         try
                         {
                             saveImagePerson.Resize(100, 100, Inter.Cubic).Save(path + @"\" + idTrainTextBox.Text + "_" + DateTime.Now.ToString("dd-mm-yyyy-hh-mm-ss") + ".jpg");
@@ -85,10 +79,9 @@ namespace FaceRecognition
         {
             int trainLabel = 0;
             int loop = 0;
-            double Threshold = 4000;
+            double Threshold = 5000;
             TrainedFaces.Clear();
-            StudentLabels.Clear();
-            StudentIds.Clear();
+            TrainedLabels.Clear();
             try
             {
                 UpdateTrainProcessTextBox("Training ...");
@@ -108,7 +101,6 @@ namespace FaceRecognition
                     {
                         label = name;
                         listLabel.Add(trainLabel, label);
-
                     }
                     if (name != label)
                     {
@@ -117,23 +109,15 @@ namespace FaceRecognition
                         label = name;
                         listLabel.Add(trainLabel, label);
                     }
-                    /*if(loop == 100)
-                    {
-                        loop = 0;
-                        trainLabel++;
-                        listLabel.Add(trainLabel, label);
-                    }*/
                     Image<Gray, byte> trainedImage = new Image<Gray, byte>(file).Resize(100, 100, Inter.Cubic);
                     //Increase contrast and normalize brightness
                     CvInvoke.EqualizeHist(trainedImage, trainedImage);
                    
                     //Add images and label to train
                     TrainedFaces.Add(trainedImage);
-                    StudentLabels.Add(trainLabel);
-                    StudentIds.Add(name);
+                    TrainedLabels.Add(trainLabel);
                     Debug.WriteLine(trainLabel + ". " + name + ". " + file);
                     loop++;
-
                 }
                 Debug.WriteLine("Sortlist");
 
@@ -155,10 +139,10 @@ namespace FaceRecognition
                     VectorOfMat vectorOfMat = new VectorOfMat();
                     vectorOfMat.Push(Faces);
                     Debug.WriteLine(Faces[0]);
-                    Console.WriteLine(StudentLabels);
+                    Console.WriteLine(TrainedLabels);
 
                     //Convert list of labels to vector of Int
-                    int[] labels = StudentLabels.ToArray();
+                    int[] labels = TrainedLabels.ToArray();
                     VectorOfInt vectorOfInt = new VectorOfInt();
                     vectorOfInt.Push(labels);
 
@@ -276,7 +260,6 @@ namespace FaceRecognition
         //DETECT FACE USING HAARCASCADE
         public Rectangle[] DetectFaces(Mat frame)
         {
-            CascadeClassifier faceCascadeClassifier = new CascadeClassifier(Directory.GetCurrentDirectory() + "/haarcascade_frontalface_alt.xml");
             if (streamVideo)
             {
                 Mat grayImage = new Mat();
