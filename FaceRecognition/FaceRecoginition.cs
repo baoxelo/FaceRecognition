@@ -1,4 +1,4 @@
-using Emgu.CV.Face;
+﻿using Emgu.CV.Face;
 using Emgu.CV.Structure;
 using Emgu.CV;
 using System.Linq;
@@ -10,11 +10,14 @@ using System.Xml.Linq;
 using Microsoft.Data.Sqlite;
 using System.Data.Common;
 using System.IO;
+using FaceRecognition.Models;
+
 
 namespace FaceRecognition
 {
     public partial class FaceRecoginition : Form
     {
+        private readonly ClassAttendanceContext _context;
         #region Variables
         public bool streamVideo = false;
         bool faceDetectEnable = false;
@@ -28,12 +31,18 @@ namespace FaceRecognition
         private EigenFaceRecognizer recognizer { set; get; }
         #endregion
         VideoCapture capture = new VideoCapture(0);
-
+        List<AttendanceItem> attendanceItems = new List<AttendanceItem>();
         CascadeClassifier faceCascadeClassifier = new CascadeClassifier(Directory.GetCurrentDirectory() + "/haarcascade_frontalface_alt.xml");
 
-        public FaceRecoginition()
+        public FaceRecoginition(ClassAttendanceContext context)
         {
             InitializeComponent();
+            if (File.Exists("recognizer.xml"))
+            {
+                recognizer = new EigenFaceRecognizer();
+                recognizer.Read("recognizer.xml");
+            }
+            _context = context;
         }
 
         //SAVE IMAGE POCESS
@@ -67,7 +76,7 @@ namespace FaceRecognition
                             Debug.WriteLine(ex);
                         }
                     }
-                    
+
                 }
             }
 
@@ -77,9 +86,18 @@ namespace FaceRecognition
         //TRAIN IMAGE IN DATASET
         private Task TrainImageFromDir()
         {
+            //RESET DATABASE AND RECOGINIZER
+            var allStudent = _context.Students.ToList();
+            _context.Students.RemoveRange(allStudent);
+            var allLabel = _context.LabelStudents.ToList();
+            _context.LabelStudents.RemoveRange(allLabel);
+            _context.SaveChanges();
+            recognizer.Dispose();
+
+            //INIT 
             int trainLabel = 0;
             int loop = 0;
-            double Threshold = 5000;
+            double Threshold = 4000;
             TrainedFaces.Clear();
             TrainedLabels.Clear();
             try
@@ -87,39 +105,57 @@ namespace FaceRecognition
                 UpdateTrainProcessTextBox("Training ...");
                 string path = Path.Combine(Directory.GetCurrentDirectory(), "TrainedImages");
                 Debug.WriteLine($"{path}");
-                string[] files = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories);
+                string[] parentDirectories = Directory.GetDirectories(path, "*", SearchOption.TopDirectoryOnly);
                 string? label = null;
-                foreach (var file in files)
+                foreach (var parentDirectory in parentDirectories)
                 {
-                    Debug.WriteLine($"{file}");
-                }
-                foreach (var file in files)
-                {
-                    //Make sure the image's size
-                    string name = file.Split('\\').Last().Split('_')[0];
-                    if (label == null)
+                    // Lấy tên của thư mục cha
+                    string parentFolderName = Path.GetFileName(parentDirectory);
+                    Debug.WriteLine($"Parent folder: {parentFolderName}");
+                    label = parentFolderName;
+
+                    var newLabel = new LabelStudent()
                     {
-                        label = name;
-                        listLabel.Add(trainLabel, label);
-                    }
-                    if (name != label)
+                        StudentId = parentFolderName,
+                        LabelName = trainLabel
+                    };
+                    _context.LabelStudents.Add(newLabel);
+                    var newStudent = new Student()
                     {
-                        trainLabel++;
-                        loop = 0;
-                        label = name;
-                        listLabel.Add(trainLabel, label);
+                        Name = label,
+                        StudentId = label,
+                        
+                    };
+                    _context.Students.Add(newStudent);
+                    // Lặp qua các tệp trong thư mục cha
+                    string[] parentFiles = Directory.GetFiles(parentDirectory, "*.jpg", SearchOption.AllDirectories);
+                    foreach (var file in parentFiles)
+                    {
+                        string name = Path.GetFileName(file);
+                        Debug.WriteLine($"  File in parent folder: {file}");
+
+                        Image<Gray, byte> trainedImage = new Image<Gray, byte>(file);
+                        Rectangle[] faces = faceCascadeClassifier.DetectMultiScale(trainedImage, 1.1, 3, Size.Empty, Size.Empty);
+
+
+                        if (faces.Length == 1)
+                        {
+                            trainedImage.ROI = faces[0];
+                            trainedImage = trainedImage.Resize(100, 100, Inter.Cubic);
+                            //Increase contrast and normalize brightness
+                            CvInvoke.EqualizeHist(trainedImage, trainedImage);
+
+                            //Add images and label to train
+                            TrainedFaces.Add(trainedImage);
+                            TrainedLabels.Add(trainLabel);
+                            Debug.WriteLine(trainLabel + ". " + label + ". " + name);
+                        }
                     }
-                    Image<Gray, byte> trainedImage = new Image<Gray, byte>(file).Resize(100, 100, Inter.Cubic);
-                    //Increase contrast and normalize brightness
-                    CvInvoke.EqualizeHist(trainedImage, trainedImage);
-                   
-                    //Add images and label to train
-                    TrainedFaces.Add(trainedImage);
-                    TrainedLabels.Add(trainLabel);
-                    Debug.WriteLine(trainLabel + ". " + name + ". " + file);
-                    loop++;
+                    listLabel.Add(trainLabel, label);
+                    trainLabel++;
+
                 }
-                Debug.WriteLine("Sortlist");
+                _context.SaveChanges();
 
                 foreach (KeyValuePair<int, string> item in listLabel)
                 {
@@ -128,32 +164,30 @@ namespace FaceRecognition
 
                 if (TrainedFaces.Count > 0)
                 {
-                    //Create new recognizer
-                    if (recognizer == null)
-                    {
-                        recognizer = new EigenFaceRecognizer(int.MaxValue, Threshold);
-                        
-                    }
+
+                    recognizer = new EigenFaceRecognizer(int.MaxValue, Threshold);
                     //Convert list of image to vector of Mat
                     Image<Gray, byte>[] Faces = TrainedFaces.ToArray();
-                    VectorOfMat vectorOfMat = new VectorOfMat();
-                    vectorOfMat.Push(Faces);
+                    VectorOfMat vectorOfImages = new VectorOfMat();
+                    vectorOfImages.Push(Faces);
                     Debug.WriteLine(Faces[0]);
                     Console.WriteLine(TrainedLabels);
 
                     //Convert list of labels to vector of Int
                     int[] labels = TrainedLabels.ToArray();
-                    VectorOfInt vectorOfInt = new VectorOfInt();
-                    vectorOfInt.Push(labels);
+                    VectorOfInt vectorOfLabels = new VectorOfInt();
+                    vectorOfLabels.Push(labels);
 
                     //Train all images and labels
                     Task training = new Task(() =>
                     {
-                        recognizer.Train(vectorOfMat, vectorOfInt);
+                        recognizer.Train(vectorOfImages, vectorOfLabels);
                         UpdateTrainProcessTextBox("Training successfully");
+                        recognizer.Write("recognizer.xml");
                     }
                     );
                     training.Start();
+
 
                 }
                 else
@@ -167,12 +201,11 @@ namespace FaceRecognition
                 isTrained = false;
                 MessageBox.Show("Error in Train Images: " + ex.Message);
             }
-
             return Task.CompletedTask;
         }
 
         //CAPTURE IMAGE AND DISPLAY ON RECOGNITION PAGE
-        private void Capture_Recognite_ImageGrabbed(object? sender, EventArgs e)
+        private async void Capture_Recognite_ImageGrabbed(object? sender, EventArgs e)
         {
             Mat frame = new Mat();
             capture.Retrieve(frame);/*
@@ -199,9 +232,26 @@ namespace FaceRecognition
                         //Here results found known faces
                         if (result.Label != -1)
                         {
-                            CvInvoke.PutText(frame, listLabel.FirstOrDefault(q => q.Key == result.Label).Value.ToString(), new Point(face.X - 2, face.Y - 2),
-                            FontFace.HersheyComplex, 1.0, new Bgr(Color.Orange).MCvScalar);
-                            CvInvoke.Rectangle(frame, face, new Bgr(Color.Green).MCvScalar, 2);
+                            var labelEntry = _context.LabelStudents.FirstOrDefault(q => q.LabelName == result.Label);
+                            if (labelEntry != null)
+                            {
+                                CvInvoke.PutText(frame, labelEntry.StudentId, new Point(face.X - 2, face.Y - 2),
+                                FontFace.HersheyComplex, 1.0, new Bgr(Color.Orange).MCvScalar);
+                                CvInvoke.Rectangle(frame, face, new Bgr(Color.Green).MCvScalar, 2);
+
+                                var existItem = attendanceItems.FirstOrDefault(x => x.StudentId == labelEntry.StudentId);
+                                if (existItem == null)
+                                {
+                                    var attendanceItem = new AttendanceItem()
+                                    {
+                                        StudentId = labelEntry.StudentId,
+                                        Status = "Present"
+                                    };
+                                    attendanceItems.Add(attendanceItem);
+                                    string listStudent = string.Join(Environment.NewLine, attendanceItems.Select(q => q.StudentId));
+                                    UpdateListStudentTextBox(listStudent);
+                                }
+                            }
 
 
                         }
@@ -285,6 +335,18 @@ namespace FaceRecognition
                 trainProcessTextBox.Text = text;
             }
         }
+
+        private void UpdateListStudentTextBox(string text)
+        {
+            if (listStudentBox.InvokeRequired)
+            {
+                listStudentBox.Invoke(new Action(() => UpdateListStudentTextBox(text)));
+            }
+            else
+            {
+                listStudentBox.Text = text;
+            }
+        }
         private void UpdateProgressText(string text)
         {
             if (percentProgess.InvokeRequired)
@@ -293,6 +355,7 @@ namespace FaceRecognition
             }
             else
             {
+                Console.Write(text);
                 percentProgess.Text = text;
             }
         }
@@ -326,7 +389,6 @@ namespace FaceRecognition
         }
         private void closeCameraBtn_Click(object sender, EventArgs e)
         {
-            //Close current camera when switch tab
             closeCamera();
         }
         private void closeTrainCamera_Click(object sender, EventArgs e)
@@ -338,6 +400,7 @@ namespace FaceRecognition
             streamVideo = true;
             capture.ImageGrabbed += Capture_Train_ImageGrabbed;
             capture.Start();
+
         }
 
 
@@ -345,7 +408,7 @@ namespace FaceRecognition
         {
             UpdateTrainProcessTextBox("Saving images ...!");
             saveStudentImageBtn.Enabled = false;
-            
+
             Task saving = new Task(async () =>
             {
                 string path = Path.Combine(Directory.GetCurrentDirectory(), "TrainedImages");
@@ -375,28 +438,93 @@ namespace FaceRecognition
 
         private void checkAttendanceButton_Click(object sender, EventArgs e)
         {
-            /*Attendance attendance = new Attendance() { AttendanceDate = selectDatePicker.Value, Note = noteTextBox.Text, Attend = Students.Count() };
-            _dbContext.Attendances.Add(attendance);*/
+            var attendance = new Attendance()
+            {
+                AttendanceDate = selectDatePicker.Value,
+                Note = noteTextBox.Text,
+            };
+            _context.Attendances.Add(attendance);
+            _context.SaveChanges();
 
-            // ADO .NET TO CREATE DATE COLUMNS 
-            var sqlStringBuilder = new SqliteConnectionStringBuilder();
-            sqlStringBuilder["filename"] = Path.Combine(Directory.GetCurrentDirectory() + "Database/database.db");
-
-            var sqlStringConnection = sqlStringBuilder.ToString();
-            using var connection = new SqliteConnection(sqlStringConnection);
-            connection.Open();
-
-            using DbCommand command = new SqliteCommand();
-            command.Connection = connection;
-            command.CommandText = $"alter table CheckDate add {selectDatePicker.Value} nvarchar(10)";
-            command.ExecuteNonQuery();
-            //... insert Attend or Absent for this column ...// 
-            connection.Close();
+            // Insert present student
+            foreach (var item in attendanceItems)
+            {
+                item.AttendanceId = attendance.Id;
+            }
+            // Insert absent student
+            var allStudents = _context.Students.ToList();
+            var presentStudent = attendanceItems.Select(q => q.StudentId).ToList();
+            var absentStudent = allStudents.Where(q => !presentStudent.Contains(q.StudentId)).ToList();
+            foreach (var item in absentStudent)
+            {
+                var attendanceItem = new AttendanceItem()
+                {
+                    AttendanceId = attendance.Id,
+                    StudentId = item.StudentId,
+                    Status = "Absent"
+                };
+                attendanceItems.Add(attendanceItem);
+            }
+            _context.AttendanceItems.AddRange(attendanceItems);
+            _context.SaveChanges();
         }
 
         private void recognitionBtn_Click(object sender, EventArgs e)
         {
             isRecognition = true;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            streamVideo = true;
+            capture.ImageGrabbed += Capture_Train_ImageGrabbed;
+            capture.Start();
+
+        }
+
+
+        private void getAttendanceInfoBtn_Click(object sender, EventArgs e)
+        {
+            // Ensure your TextBox uses a monospaced font for proper alignment
+            attendanceTableTextBox.Font = new Font("Courier New", 10);
+
+            // Query data from the database
+            var attendances = _context.Attendances.ToList();
+            var attendanceItems = _context.AttendanceItems.ToList();
+
+            // Get the list of unique attendance dates
+            var attendanceDates = attendances.Select(a => a.AttendanceDate).Distinct().OrderBy(d => d).ToList();
+
+            // Create the header for the table
+            var header = "ATTENDANCE INFORMATION";
+
+            // Create the column headers for the table
+            var columns = "Attendance Dates:".PadRight(20);
+            foreach (var date in attendanceDates)
+            {
+                columns += date.ToString("dd/MM/yyyy").PadRight(15);
+            }
+
+            // Create the data rows
+            var rows = new List<string>();
+            var studentIds = attendanceItems.Select(ai => ai.StudentId).Distinct().OrderBy(id => id).ToList();
+            foreach (var studentId in studentIds)
+            {
+                var row = studentId.PadRight(20);
+                foreach (var date in attendanceDates)
+                {
+                    var attendanceId = attendances.FirstOrDefault(a => a.AttendanceDate == date)?.Id ?? 0;
+                    var status = attendanceItems.FirstOrDefault(ai => ai.StudentId == studentId && ai.AttendanceId == attendanceId)?.Status ?? "Absent";
+                    row += status.PadRight(15);
+                }
+                rows.Add(row);
+            }
+
+            // Combine the header and data rows into a single string
+            var result = header + Environment.NewLine + columns + Environment.NewLine + string.Join(Environment.NewLine, rows);
+
+            // Display the result in the TextBox
+            attendanceTableTextBox.Text = result;
         }
     }
 }

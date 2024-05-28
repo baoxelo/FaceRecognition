@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FaceRecognition.Models;
 
@@ -7,9 +9,11 @@ public partial class AttendanceItem
 {
     public int Id { get; set; }
 
-    public int? StudentId { get; set; }
+    public string? StudentId { get; set; }
 
-    public int? AttendanceId { get; set; }
+    [ForeignKey(nameof(Attendance))]
+    public int AttendanceId { get; set; }
+    public Attendance Attendance { get; set; }
 
     public string? Status { get; set; }
 
