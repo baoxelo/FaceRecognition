@@ -9,6 +9,10 @@ public partial class AttendanceItem
 {
     public int Id { get; set; }
 
+    [ForeignKey(nameof(Student))]
+    public int StudentForeignID { get; set; }
+    public Student Student { get; set; }
+
     public string? StudentId { get; set; }
 
     [ForeignKey(nameof(Attendance))]

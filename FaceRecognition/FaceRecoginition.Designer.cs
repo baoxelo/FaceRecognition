@@ -32,12 +32,17 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FaceRecoginition));
             tabMain = new TabControl();
             Recognition = new TabPage();
+            groupBox6 = new GroupBox();
+            cboDevices = new ComboBox();
             groupBox5 = new GroupBox();
+            qualityFailTextbox = new TextBox();
+            qualityUnkTextbox = new TextBox();
+            qualityCorrectTextbox = new TextBox();
             label14 = new Label();
             label13 = new Label();
             label12 = new Label();
             label11 = new Label();
-            textBox2 = new TextBox();
+            qualityCheckTextbox = new TextBox();
             checkQualityBtn = new Button();
             groupBox2 = new GroupBox();
             cameraBox = new PictureBox();
@@ -60,6 +65,8 @@
             openCameraBtn = new Button();
             Training = new TabPage();
             InformationGroup = new GroupBox();
+            label15 = new Label();
+            emailTextBox = new TextBox();
             percentProgess = new TextBox();
             saveStudentImageBtn = new Button();
             buttonTrainImage = new Button();
@@ -76,15 +83,16 @@
             trainingCameraBox = new PictureBox();
             groupBox3 = new GroupBox();
             Attendance = new TabPage();
+            attendanceTableTextBox = new RichTextBox();
             getAttendanceInfoBtn = new Button();
             label1 = new Label();
             GroupLogo = new PictureBox();
             UniversityLogo = new PictureBox();
             label2 = new Label();
             contextMenuStrip1 = new ContextMenuStrip(components);
-            attendanceTableTextBox = new RichTextBox();
             tabMain.SuspendLayout();
             Recognition.SuspendLayout();
+            groupBox6.SuspendLayout();
             groupBox5.SuspendLayout();
             groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)cameraBox).BeginInit();
@@ -116,6 +124,7 @@
             // 
             // Recognition
             // 
+            Recognition.Controls.Add(groupBox6);
             Recognition.Controls.Add(groupBox5);
             Recognition.Controls.Add(groupBox2);
             Recognition.Controls.Add(groupBox1);
@@ -130,13 +139,36 @@
             Recognition.Text = "Recognition";
             Recognition.UseVisualStyleBackColor = true;
             // 
+            // groupBox6
+            // 
+            groupBox6.Controls.Add(cboDevices);
+            groupBox6.Location = new Point(1242, 451);
+            groupBox6.Margin = new Padding(3, 4, 3, 4);
+            groupBox6.Name = "groupBox6";
+            groupBox6.Padding = new Padding(3, 4, 3, 4);
+            groupBox6.Size = new Size(367, 293);
+            groupBox6.TabIndex = 7;
+            groupBox6.TabStop = false;
+            groupBox6.Text = "Camera Devices";
+            // 
+            // cboDevices
+            // 
+            cboDevices.FormattingEnabled = true;
+            cboDevices.Location = new Point(21, 31);
+            cboDevices.Name = "cboDevices";
+            cboDevices.Size = new Size(307, 28);
+            cboDevices.TabIndex = 0;
+            // 
             // groupBox5
             // 
+            groupBox5.Controls.Add(qualityFailTextbox);
+            groupBox5.Controls.Add(qualityUnkTextbox);
+            groupBox5.Controls.Add(qualityCorrectTextbox);
             groupBox5.Controls.Add(label14);
             groupBox5.Controls.Add(label13);
             groupBox5.Controls.Add(label12);
             groupBox5.Controls.Add(label11);
-            groupBox5.Controls.Add(textBox2);
+            groupBox5.Controls.Add(qualityCheckTextbox);
             groupBox5.Controls.Add(checkQualityBtn);
             groupBox5.Location = new Point(1248, 11);
             groupBox5.Margin = new Padding(3, 4, 3, 4);
@@ -147,10 +179,34 @@
             groupBox5.TabStop = false;
             groupBox5.Text = "Quality Check";
             // 
+            // qualityFailTextbox
+            // 
+            qualityFailTextbox.Location = new Point(168, 275);
+            qualityFailTextbox.Margin = new Padding(3, 4, 3, 4);
+            qualityFailTextbox.Name = "qualityFailTextbox";
+            qualityFailTextbox.Size = new Size(154, 27);
+            qualityFailTextbox.TabIndex = 13;
+            // 
+            // qualityUnkTextbox
+            // 
+            qualityUnkTextbox.Location = new Point(168, 236);
+            qualityUnkTextbox.Margin = new Padding(3, 4, 3, 4);
+            qualityUnkTextbox.Name = "qualityUnkTextbox";
+            qualityUnkTextbox.Size = new Size(154, 27);
+            qualityUnkTextbox.TabIndex = 12;
+            // 
+            // qualityCorrectTextbox
+            // 
+            qualityCorrectTextbox.Location = new Point(168, 192);
+            qualityCorrectTextbox.Margin = new Padding(3, 4, 3, 4);
+            qualityCorrectTextbox.Name = "qualityCorrectTextbox";
+            qualityCorrectTextbox.Size = new Size(154, 27);
+            qualityCorrectTextbox.TabIndex = 11;
+            // 
             // label14
             // 
             label14.AutoSize = true;
-            label14.Location = new Point(15, 153);
+            label14.Location = new Point(15, 195);
             label14.Name = "label14";
             label14.Size = new Size(103, 20);
             label14.TabIndex = 10;
@@ -159,7 +215,7 @@
             // label13
             // 
             label13.AutoSize = true;
-            label13.Location = new Point(15, 186);
+            label13.Location = new Point(15, 239);
             label13.Name = "label13";
             label13.Size = new Size(116, 20);
             label13.TabIndex = 9;
@@ -168,7 +224,7 @@
             // label12
             // 
             label12.AutoSize = true;
-            label12.Location = new Point(15, 216);
+            label12.Location = new Point(15, 282);
             label12.Name = "label12";
             label12.Size = new Size(77, 20);
             label12.TabIndex = 8;
@@ -179,17 +235,17 @@
             label11.AutoSize = true;
             label11.Location = new Point(15, 55);
             label11.Name = "label11";
-            label11.Size = new Size(114, 20);
+            label11.Size = new Size(92, 20);
             label11.TabIndex = 7;
-            label11.Text = "Students name :";
+            label11.Text = "Students ID :";
             // 
-            // textBox2
+            // qualityCheckTextbox
             // 
-            textBox2.Location = new Point(168, 48);
-            textBox2.Margin = new Padding(3, 4, 3, 4);
-            textBox2.Name = "textBox2";
-            textBox2.Size = new Size(154, 27);
-            textBox2.TabIndex = 4;
+            qualityCheckTextbox.Location = new Point(168, 48);
+            qualityCheckTextbox.Margin = new Padding(3, 4, 3, 4);
+            qualityCheckTextbox.Name = "qualityCheckTextbox";
+            qualityCheckTextbox.Size = new Size(154, 27);
+            qualityCheckTextbox.TabIndex = 4;
             // 
             // checkQualityBtn
             // 
@@ -200,6 +256,7 @@
             checkQualityBtn.TabIndex = 2;
             checkQualityBtn.Text = "Check quality";
             checkQualityBtn.UseVisualStyleBackColor = true;
+            checkQualityBtn.Click += checkQualityBtn_Click;
             // 
             // groupBox2
             // 
@@ -416,6 +473,8 @@
             // 
             // InformationGroup
             // 
+            InformationGroup.Controls.Add(label15);
+            InformationGroup.Controls.Add(emailTextBox);
             InformationGroup.Controls.Add(percentProgess);
             InformationGroup.Controls.Add(saveStudentImageBtn);
             InformationGroup.Controls.Add(buttonTrainImage);
@@ -425,7 +484,7 @@
             InformationGroup.Controls.Add(nameTrainTextBox);
             InformationGroup.Controls.Add(label8);
             InformationGroup.Controls.Add(label7);
-            InformationGroup.Location = new Point(1035, 433);
+            InformationGroup.Location = new Point(1035, 423);
             InformationGroup.Margin = new Padding(3, 4, 3, 4);
             InformationGroup.Name = "InformationGroup";
             InformationGroup.Padding = new Padding(3, 4, 3, 4);
@@ -433,6 +492,23 @@
             InformationGroup.TabIndex = 3;
             InformationGroup.TabStop = false;
             InformationGroup.Text = "Information";
+            // 
+            // label15
+            // 
+            label15.AutoSize = true;
+            label15.Location = new Point(27, 96);
+            label15.Name = "label15";
+            label15.Size = new Size(53, 20);
+            label15.TabIndex = 10;
+            label15.Text = "Email :";
+            // 
+            // emailTextBox
+            // 
+            emailTextBox.Location = new Point(142, 96);
+            emailTextBox.Margin = new Padding(3, 4, 3, 4);
+            emailTextBox.Name = "emailTextBox";
+            emailTextBox.Size = new Size(199, 27);
+            emailTextBox.TabIndex = 9;
             // 
             // percentProgess
             // 
@@ -448,7 +524,7 @@
             saveStudentImageBtn.Location = new Point(133, 131);
             saveStudentImageBtn.Margin = new Padding(3, 4, 3, 4);
             saveStudentImageBtn.Name = "saveStudentImageBtn";
-            saveStudentImageBtn.Size = new Size(200, 37);
+            saveStudentImageBtn.Size = new Size(200, 39);
             saveStudentImageBtn.TabIndex = 7;
             saveStudentImageBtn.Text = "Save Student Images";
             saveStudentImageBtn.UseVisualStyleBackColor = true;
@@ -456,10 +532,10 @@
             // 
             // buttonTrainImage
             // 
-            buttonTrainImage.Location = new Point(133, 176);
+            buttonTrainImage.Location = new Point(133, 178);
             buttonTrainImage.Margin = new Padding(3, 4, 3, 4);
             buttonTrainImage.Name = "buttonTrainImage";
-            buttonTrainImage.Size = new Size(200, 37);
+            buttonTrainImage.Size = new Size(200, 35);
             buttonTrainImage.TabIndex = 6;
             buttonTrainImage.Text = "Train";
             buttonTrainImage.UseVisualStyleBackColor = true;
@@ -485,7 +561,7 @@
             // 
             // idTrainTextBox
             // 
-            idTrainTextBox.Location = new Point(133, 83);
+            idTrainTextBox.Location = new Point(142, 59);
             idTrainTextBox.Margin = new Padding(3, 4, 3, 4);
             idTrainTextBox.Name = "idTrainTextBox";
             idTrainTextBox.Size = new Size(199, 27);
@@ -493,7 +569,7 @@
             // 
             // nameTrainTextBox
             // 
-            nameTrainTextBox.Location = new Point(133, 44);
+            nameTrainTextBox.Location = new Point(142, 21);
             nameTrainTextBox.Margin = new Padding(3, 4, 3, 4);
             nameTrainTextBox.Name = "nameTrainTextBox";
             nameTrainTextBox.Size = new Size(199, 27);
@@ -502,7 +578,7 @@
             // label8
             // 
             label8.AutoSize = true;
-            label8.Location = new Point(27, 87);
+            label8.Location = new Point(27, 59);
             label8.Name = "label8";
             label8.Size = new Size(86, 20);
             label8.TabIndex = 1;
@@ -511,7 +587,7 @@
             // label7
             // 
             label7.AutoSize = true;
-            label7.Location = new Point(27, 48);
+            label7.Location = new Point(27, 24);
             label7.Name = "label7";
             label7.Size = new Size(108, 20);
             label7.TabIndex = 0;
@@ -595,6 +671,14 @@
             Attendance.Text = "Attendance";
             Attendance.UseVisualStyleBackColor = true;
             // 
+            // attendanceTableTextBox
+            // 
+            attendanceTableTextBox.Location = new Point(20, 62);
+            attendanceTableTextBox.Name = "attendanceTableTextBox";
+            attendanceTableTextBox.Size = new Size(1552, 675);
+            attendanceTableTextBox.TabIndex = 1;
+            attendanceTableTextBox.Text = "";
+            // 
             // getAttendanceInfoBtn
             // 
             getAttendanceInfoBtn.Location = new Point(20, 19);
@@ -656,14 +740,6 @@
             contextMenuStrip1.Name = "contextMenuStrip1";
             contextMenuStrip1.Size = new Size(61, 4);
             // 
-            // attendanceTableTextBox
-            // 
-            attendanceTableTextBox.Location = new Point(20, 62);
-            attendanceTableTextBox.Name = "attendanceTableTextBox";
-            attendanceTableTextBox.Size = new Size(1552, 675);
-            attendanceTableTextBox.TabIndex = 1;
-            attendanceTableTextBox.Text = "";
-            // 
             // FaceRecoginition
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
@@ -677,8 +753,10 @@
             Margin = new Padding(3, 4, 3, 4);
             Name = "FaceRecoginition";
             Text = "Form1";
+            Load += FaceRecoginition_Load;
             tabMain.ResumeLayout(false);
             Recognition.ResumeLayout(false);
+            groupBox6.ResumeLayout(false);
             groupBox5.ResumeLayout(false);
             groupBox5.PerformLayout();
             groupBox2.ResumeLayout(false);
@@ -728,20 +806,10 @@
         private GroupBox groupBox4;
         private PictureBox trainingCameraBox;
         private GroupBox groupBox3;
-        private GroupBox InformationGroup;
         private Button closeTrainCamera;
         private Button openTrainCamera;
         private PictureBox faceDetectTrainBox;
-        private Label label9;
-        private TextBox idTrainTextBox;
-        private TextBox nameTrainTextBox;
-        private Label label8;
-        private Label label7;
-        private Button buttonTrainImage;
-        private TextBox trainProcessTextBox;
         private Button checkAttendanceButton;
-        private Button saveStudentImageBtn;
-        private TextBox percentProgess;
         private TextBox textBox1;
         private Label label10;
         private Label label4;
@@ -749,12 +817,29 @@
         private RichTextBox listStudentBox;
         private GroupBox groupBox5;
         private Label label11;
-        private TextBox textBox2;
+        private TextBox qualityCheckTextbox;
         private Button checkQualityBtn;
         private Label label14;
         private Label label13;
         private Label label12;
         private Button getAttendanceInfoBtn;
         private RichTextBox attendanceTableTextBox;
+        private TextBox qualityFailTextbox;
+        private TextBox qualityUnkTextbox;
+        private TextBox qualityCorrectTextbox;
+        private GroupBox InformationGroup;
+        private Label label15;
+        private TextBox emailTextBox;
+        private TextBox percentProgess;
+        private Button saveStudentImageBtn;
+        private Button buttonTrainImage;
+        private TextBox trainProcessTextBox;
+        private Label label9;
+        private TextBox idTrainTextBox;
+        private TextBox nameTrainTextBox;
+        private Label label8;
+        private Label label7;
+        private GroupBox groupBox6;
+        private ComboBox cboDevices;
     }
 }

@@ -11,7 +11,11 @@ using Microsoft.Data.Sqlite;
 using System.Data.Common;
 using System.IO;
 using FaceRecognition.Models;
-
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Tab;
+using System.Net.Mail;
+using System.Net;
+using DirectShowLib;
+using System.Text.RegularExpressions;
 
 namespace FaceRecognition
 {
@@ -19,7 +23,13 @@ namespace FaceRecognition
     {
         private readonly ClassAttendanceContext _context;
         #region Variables
+        public bool qualityCheck = false;
+        public double totalImage = 0;
+        public double correctScore = 0;
+        public double unknownScore = 0;
+        public double falseScore = 0;
         public bool streamVideo = false;
+        public DsDevice[] devices;
         bool faceDetectEnable = false;
         bool savePerson = false;
         bool isTrained = false;
@@ -30,7 +40,7 @@ namespace FaceRecognition
         SortedList<int, string> listLabel = new SortedList<int, string>();
         private EigenFaceRecognizer recognizer { set; get; }
         #endregion
-        VideoCapture capture = new VideoCapture(0);
+        VideoCapture capture ;
         List<AttendanceItem> attendanceItems = new List<AttendanceItem>();
         CascadeClassifier faceCascadeClassifier = new CascadeClassifier(Directory.GetCurrentDirectory() + "/haarcascade_frontalface_alt.xml");
 
@@ -44,40 +54,61 @@ namespace FaceRecognition
             }
             _context = context;
         }
+        private void FaceRecoginition_Load(object sender, EventArgs e)
+        {
+            // Get available video devices
+            devices = DsDevice.GetDevicesOfCat(FilterCategory.VideoInputDevice);
+            foreach (DsDevice device in devices)
+            {
+                cboDevices.Items.Add(device.Name);
+            }
 
+            if (devices.Length > 0)
+            {
+                cboDevices.SelectedIndex = 0; // Select the first device by default
+            }
+            else
+            {
+                MessageBox.Show("No video devices found.");
+            }
+        }
         //SAVE IMAGE POCESS
         public async Task SaveImageProcessAsync()
         {
             if (idTrainTextBox.Text != "" && nameTrainTextBox != null)
             {
+                int i = 0;
                 Mat frame = new Mat();
                 capture.Retrieve(frame);
                 var faces = DetectFaces(frame);
+                string path = Directory.GetCurrentDirectory() + @"\TrainedImages\" + idTrainTextBox.Text;
+                if (!Directory.Exists(path))
+                    Directory.CreateDirectory(path);
+
                 if (faces.Length == 1)
                 {
-                    foreach (var face in faces)
+                    var face = faces[0];
+                    Task.Run(() =>
                     {
                         Image<Bgr, Byte> resultImage = frame.ToImage<Bgr, Byte>();
                         resultImage.ROI = face;
 
-                        string path = Directory.GetCurrentDirectory() + @"\TrainedImages";
-                        if (!Directory.Exists(path))
-                            Directory.CreateDirectory(path);
-
-
-                        Image<Gray, Byte> saveImagePerson = resultImage.Convert<Gray, Byte>();
-                        CvInvoke.EqualizeHist(saveImagePerson, saveImagePerson);
                         try
                         {
-                            saveImagePerson.Resize(100, 100, Inter.Cubic).Save(path + @"\" + idTrainTextBox.Text + "_" + DateTime.Now.ToString("dd-mm-yyyy-hh-mm-ss") + ".jpg");
+                            string filePath = Path.Combine(path, DateTime.Now.ToString("dd-MM-yyyy-HH-mm-ss-fff") + ".jpg");
+                            resultImage.Resize(100, 100, Inter.Cubic).Save(filePath);
                         }
                         catch (Exception ex)
                         {
                             Debug.WriteLine(ex);
                         }
-                    }
+                    });
 
                 }
+            }
+            else
+            {
+
             }
 
 
@@ -97,7 +128,7 @@ namespace FaceRecognition
             //INIT 
             int trainLabel = 0;
             int loop = 0;
-            double Threshold = 4000;
+            double Threshold = 5500;
             TrainedFaces.Clear();
             TrainedLabels.Clear();
             try
@@ -124,7 +155,7 @@ namespace FaceRecognition
                     {
                         Name = label,
                         StudentId = label,
-                        
+
                     };
                     _context.Students.Add(newStudent);
                     // Lặp qua các tệp trong thư mục cha
@@ -242,14 +273,29 @@ namespace FaceRecognition
                                 var existItem = attendanceItems.FirstOrDefault(x => x.StudentId == labelEntry.StudentId);
                                 if (existItem == null)
                                 {
+                                    var student = _context.Students.FirstOrDefault(q => q.StudentId == labelEntry.StudentId);
                                     var attendanceItem = new AttendanceItem()
                                     {
-                                        StudentId = labelEntry.StudentId,
+                                        StudentId = student.StudentId,
+                                        StudentForeignID = student.Id,
                                         Status = "Present"
                                     };
                                     attendanceItems.Add(attendanceItem);
                                     string listStudent = string.Join(Environment.NewLine, attendanceItems.Select(q => q.StudentId));
                                     UpdateListStudentTextBox(listStudent);
+                                }
+
+                                if (qualityCheck == true)
+                                {
+                                    if (qualityCheckTextbox.Text != labelEntry.StudentId)
+                                    {
+                                        falseScore++;
+                                    }
+                                    else
+                                    {
+                                        correctScore++;
+                                    }
+                                    UpdateQualityTextbox(correctScore.ToString(), falseScore.ToString(), unknownScore.ToString());
                                 }
                             }
 
@@ -261,9 +307,17 @@ namespace FaceRecognition
                             CvInvoke.PutText(frame, "Unknown", new Point(face.X - 2, face.Y - 2),
                                 FontFace.HersheyComplex, 1.0, new Bgr(Color.Orange).MCvScalar);
                             CvInvoke.Rectangle(frame, face, new Bgr(Color.Red).MCvScalar, 2);
-
+                            if (qualityCheck == true)
+                            {
+                                unknownScore++;
+                                UpdateQualityTextbox(correctScore.ToString(), falseScore.ToString(), unknownScore.ToString());
+                            }
                         }
-
+                        totalImage++;
+                        if (totalImage == 5000)
+                        {
+                            qualityCheck = false;
+                        }
 
                     }
                 }
@@ -362,19 +416,21 @@ namespace FaceRecognition
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            /*this._dbContext = new DatabaseContext();
-            this._dbContext.Database.EnsureCreated();*/
             selectDatePicker.MinDate = DateTime.Now;
 
         }
         private void closeCamera()
         {
             streamVideo = false;
-            capture.Stop();
+            if(capture != null)
+            {
+                capture.Stop();
+            }
         }
 
         private void openCameraBtn_Click(object sender, EventArgs e)
         {
+            capture = new VideoCapture(cboDevices.SelectedIndex);
             streamVideo = true;
             capture.ImageGrabbed += Capture_Recognite_ImageGrabbed;
             capture.Start();
@@ -397,6 +453,7 @@ namespace FaceRecognition
         }
         private void openTrainCamera_Click(object sender, EventArgs e)
         {
+            capture = new VideoCapture(cboDevices.SelectedIndex);
             streamVideo = true;
             capture.ImageGrabbed += Capture_Train_ImageGrabbed;
             capture.Start();
@@ -408,12 +465,24 @@ namespace FaceRecognition
         {
             UpdateTrainProcessTextBox("Saving images ...!");
             saveStudentImageBtn.Enabled = false;
+            var existStudent = _context.Students.FirstOrDefault(q => q.StudentId == idTrainTextBox.Text);
+            if (existStudent == null)
+            {
+                Student newStudent = new Student()
+                {
+                    Name = nameTrainTextBox.Text,
+                    StudentId = idTrainTextBox.Text,
+                    Email = emailTextBox.Text,
+                };
+                await _context.Students.AddAsync(newStudent);
+                await _context.SaveChangesAsync();
+            }
 
             Task saving = new Task(async () =>
             {
                 string path = Path.Combine(Directory.GetCurrentDirectory(), "TrainedImages");
                 var oldFiles = Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories).Count();
-                var newFiles = 1000;
+                var newFiles = 200;
 
                 //Make sure the total files increase 100 image
                 while ((Directory.GetFiles(path, "*.jpg", SearchOption.AllDirectories)).Count() < oldFiles + newFiles)
@@ -455,18 +524,50 @@ namespace FaceRecognition
             var allStudents = _context.Students.ToList();
             var presentStudent = attendanceItems.Select(q => q.StudentId).ToList();
             var absentStudent = allStudents.Where(q => !presentStudent.Contains(q.StudentId)).ToList();
-            foreach (var item in absentStudent)
+            foreach (var student in absentStudent)
             {
                 var attendanceItem = new AttendanceItem()
                 {
                     AttendanceId = attendance.Id,
-                    StudentId = item.StudentId,
+                    StudentForeignID = student.Id,
+                    StudentId = student.StudentId,
                     Status = "Absent"
                 };
                 attendanceItems.Add(attendanceItem);
+
             }
             _context.AttendanceItems.AddRange(attendanceItems);
             _context.SaveChanges();
+
+            foreach (var student in absentStudent)
+            {
+                //SEND EMAIL TO ABSENT STUDENT
+                if (student.Email != null)
+                {
+                    try
+                    {
+                        MailMessage mail = new MailMessage();
+                        SmtpClient smtpServer = new SmtpClient("smtp.gmail.com");
+
+                        mail.From = new MailAddress("vuqcbao@gmail.com");
+                        mail.To.Add(student.Email);
+                        mail.Subject = "THÔNG BÁO ĐIỂM DANH TỪ NHÀ TRƯỜNG";
+                        mail.Body = $"Sinh viên : {student.Name} - MSSV: {student.StudentId} đã vắng mặt trong buổi học ngày {attendance.AttendanceDate.ToString()}";
+
+                        smtpServer.Port = 587;
+                        smtpServer.Credentials = new NetworkCredential("vuqcbao@gmail.com", "valw kigj hfrc ajpd");
+                        smtpServer.EnableSsl = true;
+
+                        smtpServer.Send(mail);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Error: " + ex.Message);
+                    }
+                }
+            }
+
+            MessageBox.Show("Sent email to absent students successfully");
         }
 
         private void recognitionBtn_Click(object sender, EventArgs e)
@@ -526,5 +627,28 @@ namespace FaceRecognition
             // Display the result in the TextBox
             attendanceTableTextBox.Text = result;
         }
+
+        private void checkQualityBtn_Click(object sender, EventArgs e)
+        {
+            qualityCheck = true;
+        }
+
+        private void UpdateQualityTextbox(string correct, string fail, string unknown)
+        {
+            if (qualityCorrectTextbox.InvokeRequired || qualityFailTextbox.InvokeRequired || qualityUnkTextbox.InvokeRequired)
+            {
+                qualityCorrectTextbox.Invoke(new Action(() => UpdateQualityTextbox(correct, fail, unknown)));
+                qualityFailTextbox.Invoke(new Action(() => UpdateQualityTextbox(correct, fail, unknown)));
+                qualityUnkTextbox.Invoke(new Action(() => UpdateQualityTextbox(correct, fail, unknown)));
+            }
+            else
+            {
+                qualityCorrectTextbox.Text = correct;
+                qualityFailTextbox.Text = fail;
+                qualityUnkTextbox.Text = unknown;
+            }
+        }
+
+        
     }
 }

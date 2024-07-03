@@ -27,7 +27,11 @@ public partial class ClassAttendanceContext : DbContext
 
     public virtual DbSet<LabelStudent> LabelStudents { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.UseSqlServer("Server=DESKTOP-IGPIN4U\\MSSQLSERVER01;Database=ClassAttendance;Trusted_Connection=True;TrustServerCertificate=true");
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        string connectionString = "Server=LOCALHOST;Database=ClassAttendance;User=root;Password=baobao2001";
+        optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

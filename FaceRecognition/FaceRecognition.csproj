@@ -30,10 +30,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="DirectShowLib" Version="1.0.0" />
     <PackageReference Include="Emgu.CV" Version="4.8.1.5350" />
     <PackageReference Include="Emgu.CV.Bitmap" Version="4.8.1.5350" />
     <PackageReference Include="Emgu.CV.runtime.windows" Version="4.8.1.5350" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.6" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -44,11 +45,12 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="MySql.Data" Version="8.4.0" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.2" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Haarcascade\" />
-    <Folder Include="Migrations\" />
   </ItemGroup>
 
 </Project>
